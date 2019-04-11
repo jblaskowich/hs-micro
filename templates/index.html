@@ -1,21 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
     <head>
         <title>Le râleur</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <style>
+            div.contaier-fluid {
+                padding: 25px;
+                box-sizing: border-box;
+            }
+            h1 {
+                font-family: "Trebuchet MS", Helvetica, sans-serif;
+            }
+            p {
+                font-family: "Comic Sans MS", cursive, sans-serif;
+            }
+            form {
+                font-family: "Comic Sans MS", cursive, sans-serif;
+            }
+        </style>
     </head>
     <body>
-        <h1>Le coup de gueule du râleur</h1>
-        <p>Hé, tu peux passer tous les coups de gueule que tu veux !</p>
-        <form action="/api/post" method="POST">
-            <div>
-                    <input type="text" name="title" placeholder="Titre du coup gueule" />
-            </div>
-            <div>
-                    <textarea name="content" placeholder="Allez, lâche-toi ça fait plaisir..."></textarea>
-            </div>
-            <div>
-                <input type="submit" value="Envoyer" />
-            </div>
-        </form>
+        <div class="contaier-fluid">
+            <h1>Le coup de gueule du râleur</h1>
+            <p>Hé, tu peux passer tous les coups de gueule que tu veux !</p>
+            <form action="/api/post" method="POST">
+                <div class="form-group">
+                        <input type="text" class="form-control" name="title" placeholder="Titre du coup gueule" />
+                </div>
+                <div class="form-group">
+                        <textarea class="form-control" name="content" placeholder="Allez, lâche-toi ça fait plaisir..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Envoyer</button>
+            </form>
+        </div>
     </body>
 </html>
