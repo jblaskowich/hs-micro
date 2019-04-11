@@ -59,12 +59,16 @@ func postMessage(w http.ResponseWriter, r *http.Request) {
 	if natsPort == "" {
 		natsPort = ":4222"
 	}
+	natsChan := os.Getenv("NATSCHAN")
+	if natsChan == "" {
+		natsChan = "zjnO12CgNkHD0IsuGd89zA"
+	}
 
 	nc, err := nats.Connect("nats://" + natsURL + natsPort)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = nc.Publish("foo", post)
+	err = nc.Publish(natsChan, post)
 	if err != nil {
 		log.Println(err.Error())
 		cookieValue = "Something wrong happends..."
