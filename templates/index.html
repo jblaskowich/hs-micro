@@ -1,21 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
     <head>
-        <title>blabla post</title>
+        <title>Le râleur</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <style>
+            div.contaier-fluid {
+                padding: 25px;
+                box-sizing: border-box;
+            }
+            h1 {
+                font-family: "Trebuchet MS", Helvetica, sans-serif;
+            }
+            p {
+                font-family: "Comic Sans MS", cursive, sans-serif;
+            }
+            form {
+                font-family: "Comic Sans MS", cursive, sans-serif;
+            }
+        </style>
     </head>
     <body>
-        <h1>blabla post</h1>
-        <p>Hey, you can post everything you want here!</p>
-        <form action="/api/post" method="POST">
-            <div>
-                    <input type="text" name="title" placeholder="blabla title" />
-            </div>
-            <div>
-                    <textarea name="content" placeholder="say blabla once agin"></textarea>
-            </div>
-            <div>
-                <input type="submit" value="Post" />
-            </div>
-        </form>
+        <div class="contaier-fluid">
+            <img style="vertical-align:middle;width: 100px;height: 100px;" src="https://avatars1.githubusercontent.com/u/44512336">
+            <h1 style="vertical-align:middle; display:inline;">Le coup de gueule du râleur</h1>
+            <p>Hé, tu peux passer tous les coups de gueule que tu veux !</p>
+            <form action="/api/post" method="POST">
+                <div class="form-group">
+                        <input type="text" class="form-control" name="title" placeholder="Titre du coup gueule" />
+                </div>
+                <div class="form-group">
+                        <textarea class="form-control" name="content" placeholder="Allez, lâche-toi ça fait plaisir..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Envoyer</button>
+            </form>
+        </div>
     </body>
 </html>

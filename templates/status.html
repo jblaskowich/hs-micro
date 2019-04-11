@@ -1,14 +1,27 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>status</title>
+        <title>statu</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <style>
+                div.contaier-fluid {
+                    padding: 25px;
+                    box-sizing: border-box;
+                }
+                h1 {
+                    font-family: "Trebuchet MS", Helvetica, sans-serif;
+                }
+                button {
+                    font-family: "Comic Sans MS", cursive, sans-serif;
+                }
+            </style>
     </head>
     <body>
-        <h1>{{.Cookie}}</h1>
-        <form action="/" method="GET">
-            <div>
-                <input type="submit" value="Back" />
-            </div>
-        </form>
+        <div class="contaier-fluid">
+            <h1>{{.Cookie}}</h1>
+            <form action="/" method="GET">
+                <button type="submit" class="btn btn-primary">Retour</button>
+            </form>
+        </div>
     </body>
 </html>

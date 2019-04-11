@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -36,7 +37,8 @@ func servePages(w http.ResponseWriter, r *http.Request) {
 func displayStatus(w http.ResponseWriter, r *http.Request) {
 	thisPage := Page{}
 	cookieVal, _ := r.Cookie("message")
-	thisPage.Cookie = cookieVal.Value
+	textDecode, _ := url.QueryUnescape(cookieVal.Value)
+	thisPage.Cookie = textDecode
 	t, _ := template.ParseFiles("templates/status.html")
 	t.Execute(w, thisPage)
 }
@@ -44,6 +46,9 @@ func displayStatus(w http.ResponseWriter, r *http.Request) {
 func postMessage(w http.ResponseWriter, r *http.Request) {
 	msg := Message{}
 	err := r.ParseForm()
+	if err != nil {
+		log.Println(err.Error())
+	}
 	msg.Title = r.FormValue("title")
 	msg.Content = r.FormValue("content")
 	post, err := json.Marshal(msg)
@@ -59,17 +64,22 @@ func postMessage(w http.ResponseWriter, r *http.Request) {
 	if natsPort == "" {
 		natsPort = ":4222"
 	}
+	natsChan := os.Getenv("NATSCHAN")
+	if natsChan == "" {
+		natsChan = "zjnO12CgNkHD0IsuGd89zA"
+	}
 
 	nc, err := nats.Connect("nats://" + natsURL + natsPort)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = nc.Publish("foo", post)
+	err = nc.Publish(natsChan, post)
 	if err != nil {
 		log.Println(err.Error())
-		cookieValue = "Something wrong happends..."
+		cookieValue = "Quelque chose de terrible s'est produit..."
 	} else {
-		cookieValue = "The post was sent!..."
+		textEncode := &url.URL{Path: "Le coup de gueule a été envoyé !..."}
+		cookieValue = textEncode.String()
 	}
 	cookie := http.Cookie{Name: "message", Value: cookieValue, Expires: time.Now().Add(3 * time.Second), HttpOnly: true}
 	http.SetCookie(w, &cookie)
