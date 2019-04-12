@@ -11,11 +11,17 @@
             div.form-group {
                 margin-top: 20px;
             }
+            div.panel-body {
+                margin-left: 20px;
+            }
             h1 {
                 font-family: "Trebuchet MS", Helvetica, sans-serif;
             }
             p {
                 font-family: "Comic Sans MS", cursive, sans-serif;
+            }
+            p.blabla {
+                margin-left: 20px;
             }
             form {
                 font-family: "Comic Sans MS", cursive, sans-serif;
@@ -30,8 +36,14 @@
                 <form action="/new" method="GET">
                     <button type="submit" class="btn btn-primary">Nouveau coup de gueule</button>
                 </form>
-            </div>
+            </div >
             <p>On a déjà pas mal râlé !</p>
+            <div class="panel-body">
+                {{range .}}
+                <h2>{{.Title}}</h2>
+                <p class="blabla">{{.Content}}</p>
+                {{end}}
+            </div>
         </div>
     </body>
 </html>
