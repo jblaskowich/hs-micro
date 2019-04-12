@@ -8,14 +8,12 @@
                 padding: 25px;
                 box-sizing: border-box;
             }
-            div.form-group {
-                margin-top: 20px;
-            }
             h1 {
                 font-family: "Trebuchet MS", Helvetica, sans-serif;
             }
             p {
                 font-family: "Comic Sans MS", cursive, sans-serif;
+                margin-left: 110px;
             }
             form {
                 font-family: "Comic Sans MS", cursive, sans-serif;
@@ -26,12 +24,16 @@
         <div class="contaier-fluid">
             <img style="vertical-align:bottom;width: 100px;height: 100px;" src="https://avatars1.githubusercontent.com/u/44512336">
             <h1 style="vertical-align:bottom; display:inline;">Le coup de gueule du râleur</h1>
-            <div class="form-group">
-                <form action="/new" method="GET">
-                    <button type="submit" class="btn btn-primary">Nouveau coup de gueule</button>
-                </form>
-            </div>
-            <p>On a déjà pas mal râlé !</p>
+            <p>Hé, tu peux passer tous les coups de gueule que tu veux !</p>
+            <form action="/api/post" method="POST">
+                <div class="form-group">
+                        <input type="text" class="form-control" name="title" placeholder="Titre du coup gueule" />
+                </div>
+                <div class="form-group">
+                        <textarea class="form-control" name="content" placeholder="Allez, lâche-toi ça fait plaisir..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Envoyer</button>
+            </form>
         </div>
     </body>
 </html>

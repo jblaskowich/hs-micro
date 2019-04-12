@@ -29,8 +29,13 @@ type Page struct {
 }
 
 func servePages(w http.ResponseWriter, r *http.Request) {
-	thisPage := Message{}
 	t, _ := template.ParseFiles("templates/index.html")
+	t.Execute(w, nil)
+}
+
+func newMessage(w http.ResponseWriter, r *http.Request) {
+	thisPage := Message{}
+	t, _ := template.ParseFiles("templates/new.html")
 	t.Execute(w, thisPage)
 }
 
@@ -97,8 +102,9 @@ func main() {
 	}
 	rtr := mux.NewRouter()
 	rtr.HandleFunc("/", servePages).Methods("GET")
-	rtr.HandleFunc("/api/post", postMessage).Methods("POST")
+	rtr.HandleFunc("/new", newMessage).Methods("GET")
 	rtr.HandleFunc("/api/status", displayStatus).Methods("GET")
+	rtr.HandleFunc("/api/post", postMessage).Methods("POST")
 	rtr.HandleFunc("/api/view", viewMessage).Methods("GET")
 	http.Handle("/", rtr)
 	http.ListenAndServe(port, nil)
