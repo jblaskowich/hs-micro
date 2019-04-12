@@ -1,0 +1,22 @@
+div.contaier {
+    padding: 25px;
+    box-sizing: border-box;
+}
+div.form-group {
+    margin-top: 20px;
+}
+div.posts-body {
+    margin-left: 20px;
+}
+h1 {
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
+}
+p {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+}
+#posts {
+    margin-left: 20px;
+}
+form {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+}
