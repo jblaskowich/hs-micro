@@ -17,25 +17,63 @@ import (
 
 var (
 	cookieValue string
+	natsURL     = "demo.nats.io"           // Can be superseded by env NATSURL
+	natsPort    = ":4222"                  // Can be superseded by env NATSPORT
+	natsPost    = "zjnO12CgNkHD0IsuGd89zA" // Can be superseded by env NATSCPOST
+	natsGet     = "OWM7pKQNbXd7l75l21kOzA" // Can be superseded by env NATSGET
 )
 
+// Message is the representation of a post
 type Message struct {
+	ID      string
 	Title   string
 	Content string
+	Date    string
 }
 
-type Page struct {
+// State is used to capture the status of the message sent to nats
+type State struct {
 	Cookie string
 }
 
 func servePages(w http.ResponseWriter, r *http.Request) {
-	thisPage := Message{}
+	Page := []Message{}
+
+	if os.Getenv("NATSURL") != "" {
+		natsURL = os.Getenv("NATSURL")
+	}
+	if os.Getenv("NATSPORT") != "" {
+		natsPort = os.Getenv("NATSPORT")
+	}
+	if os.Getenv("NATSGET") != "" {
+		natsGet = os.Getenv("NATSGET")
+	}
+
+	nc, err := nats.Connect("nats://" + natsURL + natsPort)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	defer nc.Close()
+
+	// This request will generate an inbox for the backend to reply
+	msg, err := nc.Request(natsGet, nil, time.Second*60)
+	if err != nil {
+		log.Fatal(err)
+	}
+	json.Unmarshal(msg.Data, &Page)
+
 	t, _ := template.ParseFiles("templates/index.html")
+	t.Execute(w, Page)
+}
+
+func newMessage(w http.ResponseWriter, r *http.Request) {
+	thisPage := Message{}
+	t, _ := template.ParseFiles("templates/new.html")
 	t.Execute(w, thisPage)
 }
 
 func displayStatus(w http.ResponseWriter, r *http.Request) {
-	thisPage := Page{}
+	thisPage := State{}
 	cookieVal, _ := r.Cookie("message")
 	textDecode, _ := url.QueryUnescape(cookieVal.Value)
 	thisPage.Cookie = textDecode
@@ -56,24 +94,21 @@ func postMessage(w http.ResponseWriter, r *http.Request) {
 		log.Println(err.Error())
 	}
 
-	natsURL := os.Getenv("NATSURL")
-	if natsURL == "" {
-		natsURL = "demo.nats.io"
+	if os.Getenv("NATSURL") != "" {
+		natsURL = os.Getenv("NATSURL")
 	}
-	natsPort := os.Getenv("NATSPORT")
-	if natsPort == "" {
-		natsPort = ":4222"
+	if os.Getenv("NATSPORT") != "" {
+		natsPort = os.Getenv("NATSPORT")
 	}
-	natsChan := os.Getenv("NATSCHAN")
-	if natsChan == "" {
-		natsChan = "zjnO12CgNkHD0IsuGd89zA"
+	if os.Getenv("NATSPOST") != "" {
+		natsPost = os.Getenv("NATSPOST")
 	}
 
 	nc, err := nats.Connect("nats://" + natsURL + natsPort)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = nc.Publish(natsChan, post)
+	err = nc.Publish(natsPost, post)
 	if err != nil {
 		log.Println(err.Error())
 		cookieValue = "Quelque chose de terrible s'est produit..."
@@ -95,10 +130,12 @@ func main() {
 	if port == "" {
 		port = ":8080"
 	}
+
 	rtr := mux.NewRouter()
 	rtr.HandleFunc("/", servePages).Methods("GET")
-	rtr.HandleFunc("/api/post", postMessage).Methods("POST")
+	rtr.HandleFunc("/new", newMessage).Methods("GET")
 	rtr.HandleFunc("/api/status", displayStatus).Methods("GET")
+	rtr.HandleFunc("/api/post", postMessage).Methods("POST")
 	rtr.HandleFunc("/api/view", viewMessage).Methods("GET")
 	http.Handle("/", rtr)
 	http.ListenAndServe(port, nil)
