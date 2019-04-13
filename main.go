@@ -18,8 +18,8 @@ var (
 	cookieValue string
 	natsURL     = "demo.nats.io"           // Can be superseded by env NATSURL
 	natsPort    = ":4222"                  // Can be superseded by env NATSPORT
-	natsPost    = "zjnO12CgNkHD0IsuGd89zA" // Can be superseded by env NATSCPOST
-	natsGet     = "OWM7pKQNbXd7l75l21kOzA" // Can be superseded by env NATSGET
+	natsPost    = "zjnO12CgNkHD0IsuGd89zA" // POST new post channel. Can be superseded by env NATSPOST
+	natsGet     = "OWM7pKQNbXd7l75l21kOzA" // GET posts channel. Can be superseded by env NATSGET
 )
 
 // Message is the representation of a post
