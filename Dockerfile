@@ -1,6 +1,6 @@
 FROM golang:1.11.5
 
-LABEL maintainer="jblaskowichgmail.com"
+LABEL maintainer="jblaskowich@gmail.com"
 
 WORKDIR /
 
