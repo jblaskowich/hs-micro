@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -36,6 +35,7 @@ type State struct {
 	Cookie string
 }
 
+// servePages send request to the back to display ALL previous posts
 func servePages(w http.ResponseWriter, r *http.Request) {
 	Page := []Message{}
 
@@ -104,6 +104,7 @@ func postMessage(w http.ResponseWriter, r *http.Request) {
 		natsPost = os.Getenv("NATSPOST")
 	}
 
+	// We create a cookie that serves to keep the status of sending the message to NATS
 	nc, err := nats.Connect("nats://" + natsURL + natsPort)
 	if err != nil {
 		log.Println(err.Error())
@@ -121,10 +122,6 @@ func postMessage(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/api/status", 301)
 }
 
-func viewMessage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Hello viewMessage")
-}
-
 func main() {
 	port := os.Getenv("HS-MICRO-FRONT")
 	if port == "" {
@@ -136,7 +133,7 @@ func main() {
 	rtr.HandleFunc("/new", newMessage).Methods("GET")
 	rtr.HandleFunc("/api/status", displayStatus).Methods("GET")
 	rtr.HandleFunc("/api/post", postMessage).Methods("POST")
-	rtr.HandleFunc("/api/view", viewMessage).Methods("GET")
+	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	http.Handle("/", rtr)
 	http.ListenAndServe(port, nil)
 }

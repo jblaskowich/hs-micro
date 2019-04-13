@@ -3,33 +3,10 @@
     <head>
         <title>Le râleur</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-        <style>
-            div.contaier-fluid {
-                padding: 25px;
-                box-sizing: border-box;
-            }
-            div.form-group {
-                margin-top: 20px;
-            }
-            div.panel-body {
-                margin-left: 20px;
-            }
-            h1 {
-                font-family: "Trebuchet MS", Helvetica, sans-serif;
-            }
-            p {
-                font-family: "Comic Sans MS", cursive, sans-serif;
-            }
-            p.blabla {
-                margin-left: 20px;
-            }
-            form {
-                font-family: "Comic Sans MS", cursive, sans-serif;
-            }
-        </style>
+        <link rel="stylesheet" href="/static/styles.css">
     </head>
     <body>
-        <div class="contaier-fluid">
+        <div class="contaier">
             <img style="vertical-align:bottom;width: 100px;height: 100px;" src="https://avatars1.githubusercontent.com/u/44512336">
             <h1 style="vertical-align:bottom; display:inline;">Le coup de gueule du râleur</h1>
             <div class="form-group">
@@ -38,10 +15,10 @@
                 </form>
             </div >
             <p>On a déjà pas mal râlé !</p>
-            <div class="panel-body">
+            <div class="posts-body">
                 {{range .}}
-                <h2>{{.Title}}</h2>
-                <p class="blabla">{{.Content}}</p>
+                <h3>{{.Title}}</h3>
+                <p id="posts">{{.Content}}</p>
                 {{end}}
             </div>
         </div>
