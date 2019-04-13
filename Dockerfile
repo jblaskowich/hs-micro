@@ -4,7 +4,9 @@ LABEL maintainer="jblaskowichgmail.com"
 
 WORKDIR /
 
-RUN go get -v ./...
+RUN go get -v -d github.com/nats-io/go-nats
+
+RUN go get -v -d github.com/gorilla/mux
 
 COPY . .
 
