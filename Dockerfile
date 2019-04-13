@@ -16,4 +16,8 @@ FROM scratch
 
 COPY --from=0 app /
 
+COPY templates templates/
+
+COPY static static/
+
 ENTRYPOINT ["/app"]
