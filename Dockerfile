@@ -4,7 +4,7 @@ LABEL maintainer="jblaskowichgmail.com"
 
 WORKDIR /
 
-RUN go get -d -v ./...
+RUN go get -v ./...
 
 COPY . .
 
