@@ -137,6 +137,7 @@ func main() {
 	rtr.HandleFunc("/api/status", displayStatus).Methods("GET")
 	rtr.HandleFunc("/api/post", postMessage).Methods("POST")
 	rtr.HandleFunc("/api/view", viewMessage).Methods("GET")
+	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	http.Handle("/", rtr)
 	http.ListenAndServe(port, nil)
 }
