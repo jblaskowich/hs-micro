@@ -14,13 +14,13 @@
                     <button type="submit" class="btn btn-primary">Nouveau coup de gueule</button>
                 </form>
             </div >
-            <p>On a déjà pas mal râlé !</p>
+            {{ range . }}
             <div class="posts-body">
-                {{range .}}
                 <h3>{{.Title}}</h3>
                 <p id="posts">{{.Content}}</p>
-                {{end}}
             </div>
+            {{ else }}
+            {{ end }}
         </div>
     </body>
 </html>
