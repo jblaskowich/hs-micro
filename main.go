@@ -142,6 +142,8 @@ func main() {
 	rtr.HandleFunc("/api/post", postMessage).Methods("POST")
 	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	http.Handle("/", rtr)
-	http.ListenAndServe(port, nil)
-	log.Printf("server started, listening on %s\n", port)
+	err := http.ListenAndServe(port, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
