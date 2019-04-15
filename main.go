@@ -51,14 +51,18 @@ func servePages(w http.ResponseWriter, r *http.Request) {
 
 	nc, err := nats.Connect("nats://" + natsURL + natsPort)
 	if err != nil {
-		log.Println(err.Error())
+		log.Fatal(err.Error())
+	} else {
+		log.Printf("connected to nats://%s%s\n", natsURL, natsPort)
 	}
 	defer nc.Close()
 
 	// This request will generate an inbox for the backend to reply
-	msg, err := nc.Request(natsGet, nil, time.Second*60)
+	msg, err := nc.Request(natsGet, nil, time.Second*3)
 	if err != nil {
 		log.Fatal(err)
+	} else {
+		log.Printf("get records on %s\n", natsGet)
 	}
 	json.Unmarshal(msg.Data, &Page)
 
@@ -108,12 +112,15 @@ func postMessage(w http.ResponseWriter, r *http.Request) {
 	nc, err := nats.Connect("nats://" + natsURL + natsPort)
 	if err != nil {
 		log.Println(err.Error())
+	} else {
+		log.Printf("connected to nats://%s%s\n", natsURL, natsPort)
 	}
 	err = nc.Publish(natsPost, post)
 	if err != nil {
 		log.Println(err.Error())
 		cookieValue = "Quelque chose de terrible s'est produit..."
 	} else {
+		log.Println("new POST published on NATS...")
 		textEncode := &url.URL{Path: "Le coup de gueule a été envoyé !..."}
 		cookieValue = textEncode.String()
 	}
@@ -136,4 +143,5 @@ func main() {
 	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	http.Handle("/", rtr)
 	http.ListenAndServe(port, nil)
+	log.Printf("server started, listening on %s\n", port)
 }
