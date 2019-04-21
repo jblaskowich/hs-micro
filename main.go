@@ -10,6 +10,7 @@ import (
 	"time"
 
 	nats "github.com/nats-io/go-nats"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/gorilla/mux"
 )
@@ -141,6 +142,7 @@ func main() {
 	rtr.HandleFunc("/api/status", displayStatus).Methods("GET")
 	rtr.HandleFunc("/api/post", postMessage).Methods("POST")
 	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/", rtr)
 	err := http.ListenAndServe(port, nil)
 	if err != nil {
