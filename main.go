@@ -7,86 +7,112 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sync"
 	"time"
 
 	nats "github.com/nats-io/go-nats"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/gorilla/mux"
 )
 
 var (
-	cookieValue string
-	natsURL     = "demo.nats.io"           // Can be superseded by env NATSURL
-	natsPort    = ":4222"                  // Can be superseded by env NATSPORT
-	natsPost    = "zjnO12CgNkHD0IsuGd89zA" // POST new post channel. Can be superseded by env NATSPOST
-	natsGet     = "OWM7pKQNbXd7l75l21kOzA" // GET posts channel. Can be superseded by env NATSGET
+	natsURL  = "demo.nats.io"           // Can be superseded by env NATSURL
+	natsPort = ":4222"                  // Can be superseded by env NATSPORT
+	natsPost = "zjnO12CgNkHD0IsuGd89zA" // POST new post channel. Can be superseded by env NATSPOST
+	natsGet  = "OWM7pKQNbXd7l75l21kOzA" // GET posts channel. Can be superseded by env NATSGET
+	port     = ":8080"
+	nc       *nats.Conn
+	wg       = sync.WaitGroup{}
 )
 
 // Message is the representation of a post
-type Message struct {
+type blog struct {
 	ID      string
 	Title   string
 	Content string
 	Date    string
 }
 
-// State is used to capture the status of the message sent to nats
-type State struct {
+type cookieStatus struct {
 	Cookie string
 }
 
-// servePages send request to the back to display ALL previous posts
-func servePages(w http.ResponseWriter, r *http.Request) {
-	Page := []Message{}
+// serveBlogs displays all the blogs registered in the database
+func serveBlogs(w http.ResponseWriter, r *http.Request) {
+	pages := getPages()
+	t, err := template.ParseFiles("templates/index.html")
+	if err != nil {
+		log.Println(err)
+	}
+	err = t.Execute(w, pages)
+	if err != nil {
+		log.Println(err)
+	}
+}
 
-	if os.Getenv("NATSURL") != "" {
-		natsURL = os.Getenv("NATSURL")
-	}
-	if os.Getenv("NATSPORT") != "" {
-		natsPort = os.Getenv("NATSPORT")
-	}
+// getPages makes a request through NATS to get all records from the database
+func getPages() []blog {
+	pages := []blog{}
 	if os.Getenv("NATSGET") != "" {
 		natsGet = os.Getenv("NATSGET")
 	}
-
-	nc, err := nats.Connect("nats://" + natsURL + natsPort)
-	if err != nil {
-		log.Fatal(err.Error())
-	} else {
-		log.Printf("connected to nats://%s%s\n", natsURL, natsPort)
-	}
-	defer nc.Close()
-
-	// This request will generate an inbox for the backend to reply
 	msg, err := nc.Request(natsGet, nil, time.Second*3)
 	if err != nil {
 		log.Fatal(err)
 	} else {
 		log.Printf("get records on %s\n", natsGet)
 	}
-	json.Unmarshal(msg.Data, &Page)
+	json.Unmarshal(msg.Data, &pages)
 
-	t, _ := template.ParseFiles("templates/index.html")
-	t.Execute(w, Page)
+	return pages
 }
 
-func newMessage(w http.ResponseWriter, r *http.Request) {
-	thisPage := Message{}
-	t, _ := template.ParseFiles("templates/new.html")
-	t.Execute(w, thisPage)
+// newBlog displays a blank form to create a new blog
+func newBlog(w http.ResponseWriter, r *http.Request) {
+	thisPage := blog{}
+	t, err := template.ParseFiles("templates/new.html")
+	if err != nil {
+		log.Println(err)
+	}
+	err = t.Execute(w, thisPage)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
-func displayStatus(w http.ResponseWriter, r *http.Request) {
-	thisPage := State{}
-	cookieVal, _ := r.Cookie("message")
-	textDecode, _ := url.QueryUnescape(cookieVal.Value)
-	thisPage.Cookie = textDecode
-	t, _ := template.ParseFiles("templates/status.html")
-	t.Execute(w, thisPage)
+// newBlogStatus retrieves the return code from the cookie
+// and informs about the status of the blog registration
+func newBlogStatus(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("templates/status.html")
+	if err != nil {
+		log.Println(err)
+	}
+	err = t.Execute(w, getStatus(r))
+	if err != nil {
+		log.Println(err)
+	}
 }
 
-func postMessage(w http.ResponseWriter, r *http.Request) {
-	msg := Message{}
+// getStatus retrieves and returns the return code contained in the cookie
+func getStatus(r *http.Request) cookieStatus {
+	cookieValue, err := r.Cookie("message")
+	if err != nil {
+		log.Println(err)
+	}
+	textDecode, err := url.QueryUnescape(cookieValue.Value)
+	if err != nil {
+		log.Println(err)
+	}
+	return cookieStatus{Cookie: textDecode}
+}
+
+// postBlog sends data from a new blog to the backend
+func postBlog(w http.ResponseWriter, r *http.Request) {
+	var (
+		msg         = blog{}
+		cookieValue string
+	)
 	err := r.ParseForm()
 	if err != nil {
 		log.Println(err.Error())
@@ -98,26 +124,13 @@ func postMessage(w http.ResponseWriter, r *http.Request) {
 		log.Println(err.Error())
 	}
 
-	if os.Getenv("NATSURL") != "" {
-		natsURL = os.Getenv("NATSURL")
-	}
-	if os.Getenv("NATSPORT") != "" {
-		natsPort = os.Getenv("NATSPORT")
-	}
+	// The status of sending the blog to the backend is kept in a cookie
 	if os.Getenv("NATSPOST") != "" {
 		natsPost = os.Getenv("NATSPOST")
 	}
-
-	// We create a cookie that serves to keep the status of sending the message to NATS
-	nc, err := nats.Connect("nats://" + natsURL + natsPort)
-	if err != nil {
-		log.Println(err.Error())
-	} else {
-		log.Printf("connected to nats://%s%s\n", natsURL, natsPort)
-	}
 	err = nc.Publish(natsPost, post)
 	if err != nil {
-		log.Println(err.Error())
+		log.Println(err)
 		cookieValue = "Quelque chose de terrible s'est produit..."
 	} else {
 		log.Println("new POST published on NATS...")
@@ -130,17 +143,38 @@ func postMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	port := os.Getenv("HS-MICRO-FRONT")
-	if port == "" {
-		port = ":8080"
+	if os.Getenv("NATSURL") != "" {
+		natsURL = os.Getenv("NATSURL")
+	}
+	if os.Getenv("NATSPORT") != "" {
+		natsPort = os.Getenv("NATSPORT")
 	}
 
+	// TODO: this should be a flag
+	if os.Getenv("HS-MICRO-FRONT") != "" {
+		port = os.Getenv("HS-MICRO-FRONT")
+	}
+
+	go func() {
+		var err error
+		nc, err = nats.Connect("nats://" + natsURL + natsPort)
+		if err != nil {
+			log.Println(err)
+		} else {
+			log.Printf("connected to nats://%s%s\n", natsURL, natsPort)
+		}
+		defer nc.Close()
+		wg.Add(1)
+		wg.Wait()
+	}()
+
 	rtr := mux.NewRouter()
-	rtr.HandleFunc("/", servePages).Methods("GET")
-	rtr.HandleFunc("/new", newMessage).Methods("GET")
-	rtr.HandleFunc("/api/status", displayStatus).Methods("GET")
-	rtr.HandleFunc("/api/post", postMessage).Methods("POST")
+	rtr.HandleFunc("/", serveBlogs).Methods("GET")
+	rtr.HandleFunc("/new", newBlog).Methods("GET")
+	rtr.HandleFunc("/api/status", newBlogStatus).Methods("GET")
+	rtr.HandleFunc("/api/post", postBlog).Methods("POST")
 	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/", rtr)
 	err := http.ListenAndServe(port, nil)
 	if err != nil {
