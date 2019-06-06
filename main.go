@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -11,7 +13,10 @@ import (
 	"time"
 
 	nats "github.com/nats-io/go-nats"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	jaeger "github.com/uber/jaeger-client-go"
+	config "github.com/uber/jaeger-client-go/config"
 
 	"github.com/gorilla/mux"
 )
@@ -36,6 +41,23 @@ type blog struct {
 
 type cookieStatus struct {
 	Cookie string
+}
+
+func initJaeger(service string) (opentracing.Tracer, io.Closer) {
+	cfg := &config.Configuration{
+		Sampler: &config.SamplerConfig{
+			Type:  "const",
+			Param: 1,
+		},
+		Reporter: &config.ReporterConfig{
+			LogSpans: true,
+		},
+	}
+	tracer, closer, err := cfg.New(service, config.Logger(jaeger.StdLogger))
+	if err != nil {
+		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
+	}
+	return tracer, closer
 }
 
 // serveBlogs displays all the blogs registered in the database
@@ -143,6 +165,7 @@ func postBlog(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
 	if os.Getenv("NATSURL") != "" {
 		natsURL = os.Getenv("NATSURL")
 	}
@@ -168,6 +191,11 @@ func main() {
 		wg.Wait()
 	}()
 
+	tracer, closer := initJaeger("hello-world")
+	defer closer.Close()
+
+	span := tracer.StartSpan("theRaleurFront")
+
 	rtr := mux.NewRouter()
 	rtr.HandleFunc("/", serveBlogs).Methods("GET")
 	rtr.HandleFunc("/new", newBlog).Methods("GET")
@@ -180,4 +208,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	span.Finish()
 }

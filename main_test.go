@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+// TODO
+// Post a new blog
+// View blogs
+// no need to mock gnats: https://gist.github.com/milosgajdos83/4d3e6bd6ed62744ea27e
 func TestNewBlog(t *testing.T) {
 	req, err := http.NewRequest("GET", "/new", nil)
 	if err != nil {
