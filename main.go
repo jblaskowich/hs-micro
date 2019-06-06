@@ -75,6 +75,12 @@ func serveBlogs(w http.ResponseWriter, r *http.Request) {
 
 // getPages makes a request through NATS to get all records from the database
 func getPages() []blog {
+
+	tracer, closer := initJaeger("getPages")
+	defer closer.Close()
+
+	span := tracer.StartSpan("GetRaleurFront")
+
 	pages := []blog{}
 	if os.Getenv("NATSGET") != "" {
 		natsGet = os.Getenv("NATSGET")
@@ -86,6 +92,8 @@ func getPages() []blog {
 		log.Printf("get records on %s\n", natsGet)
 	}
 	json.Unmarshal(msg.Data, &pages)
+
+	span.Finish()
 
 	return pages
 }
@@ -191,11 +199,6 @@ func main() {
 		wg.Wait()
 	}()
 
-	tracer, closer := initJaeger("hello-world")
-	defer closer.Close()
-
-	span := tracer.StartSpan("theRaleurFront")
-
 	rtr := mux.NewRouter()
 	rtr.HandleFunc("/", serveBlogs).Methods("GET")
 	rtr.HandleFunc("/new", newBlog).Methods("GET")
@@ -209,5 +212,4 @@ func main() {
 		log.Fatal(err)
 	}
 
-	span.Finish()
 }
