@@ -14,6 +14,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/gorilla/mux"
+
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	opentracing "github.com/opentracing/opentracing-go"
+	jaeger "github.com/uber/jaeger-client-go"
+	"github.com/uber/jaeger-client-go/zipkin"
+
 )
 
 var (
@@ -143,6 +149,28 @@ func postBlog(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	zipkinPropagator := zipkin.NewZipkinB3HTTPHeaderPropagator()
+	injector := jaeger.TracerOptions.Injector(opentracing.HTTPHeaders, zipkinPropagator)
+	extractor := jaeger.TracerOptions.Extractor(opentracing.HTTPHeaders, zipkinPropagator)
+
+	// Zipkin shares span ID between client and server spans; it must be enabled via the following option.
+	zipkinSharedRPCSpan := jaeger.TracerOptions.ZipkinSharedRPCSpan(true)
+
+	sender, _ := jaeger.NewUDPTransport("jaeger-agent.istio-system:5775", 0)
+
+	tracer, closer := jaeger.NewTracer(
+		"test",
+		jaeger.NewConstSampler(true),
+		jaeger.NewRemoteReporter(
+			sender,
+			jaeger.ReporterOptions.BufferFlushInterval(1*time.Second)),
+		injector,
+		extractor,
+		zipkinSharedRPCSpan,
+	)
+	defer closer.Close()
+	
 	if os.Getenv("NATSURL") != "" {
 		natsURL = os.Getenv("NATSURL")
 	}
@@ -176,7 +204,7 @@ func main() {
 	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/", rtr)
-	err := http.ListenAndServe(port, nil)
+	err := http.ListenAndServe(port, nethttp.Middleware(tracer, http.DefaultServeMux)))
 	if err != nil {
 		log.Fatal(err)
 	}
