@@ -78,8 +78,10 @@ func getPages() []blog {
 
 	tracer, closer := initJaeger("getPages")
 	defer closer.Close()
+	opentracing.SetGlobalTracer(tracer)
 
 	span := tracer.StartSpan("GetRaleurFront")
+	defer span.Finish()
 
 	pages := []blog{}
 	if os.Getenv("NATSGET") != "" {
@@ -93,7 +95,10 @@ func getPages() []blog {
 	}
 	json.Unmarshal(msg.Data, &pages)
 
-	span.Finish()
+	//ctx := opentracing.ContextWithSpan(context.Background(), span)
+	foo := make(map[string]string)
+	bar := span.Tracer().Inject(span.Context(), opentracing.TextMap, opentracing.TextMapCarrier(foo))
+	fmt.Println(bar)
 
 	return pages
 }
