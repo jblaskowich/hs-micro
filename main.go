@@ -98,7 +98,8 @@ func getPages() []blog {
 	//ctx := opentracing.ContextWithSpan(context.Background(), span)
 	foo := make(map[string]string)
 	bar := span.Tracer().Inject(span.Context(), opentracing.TextMap, opentracing.TextMapCarrier(foo))
-	fmt.Println(bar)
+	fmt.Println("FOO:", foo)
+	fmt.Println("BAR:", bar)
 
 	return pages
 }
