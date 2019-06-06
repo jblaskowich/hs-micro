@@ -204,7 +204,7 @@ func main() {
 	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/", rtr)
-	err := http.ListenAndServe(port, nethttp.Middleware(tracer, http.DefaultServeMux)))
+	err := http.ListenAndServe(port, nethttp.Middleware(tracer, http.DefaultServeMux))
 	if err != nil {
 		log.Fatal(err)
 	}
