@@ -83,7 +83,7 @@ func getPages() []blog {
 
 	tracer, closer := initJaeger("getPages")
 	defer closer.Close()
-	opentracing.SetGlobalTracer(tracer)
+	//opentracing.SetGlobalTracer(tracer)
 
 	span := tracer.StartSpan("GetRaleurFront")
 
