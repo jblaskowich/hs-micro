@@ -40,7 +40,7 @@ type blog struct {
 }
 
 type superTrace struct {
-	TraceID map[string]string
+	TraceID string
 }
 
 type cookieStatus struct {
@@ -89,12 +89,18 @@ func getPages() []blog {
 
 	foo := make(map[string]string)
 	span.Tracer().Inject(span.Context(), opentracing.TextMap, opentracing.TextMapCarrier(foo))
+	fmt.Println(foo["uber-trace-id"])
+
+	bar := superTrace{}
+	bar.TraceID = foo["uber-trace-id"]
+
+	baz, err := json.Marshal(bar)
 
 	pages := []blog{}
 	if os.Getenv("NATSGET") != "" {
 		natsGet = os.Getenv("NATSGET")
 	}
-	msg, err := nc.Request(natsGet, []byte(foo["uber-trace-id"]), time.Second*3)
+	msg, err := nc.Request(natsGet, baz, time.Second*3)
 	if err != nil {
 		log.Fatal(err)
 	} else {
