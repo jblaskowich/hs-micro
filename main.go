@@ -82,7 +82,6 @@ func serveBlogs(w http.ResponseWriter, r *http.Request) {
 func getPages() []blog {
 
 	tracer, closer := initJaeger("getPages")
-	defer closer.Close()
 	opentracing.SetGlobalTracer(tracer)
 
 	span := tracer.StartSpan("GetRaleurFront")
@@ -107,6 +106,8 @@ func getPages() []blog {
 		log.Printf("get records on %s\n", natsGet)
 	}
 	json.Unmarshal(msg.Data, &pages)
+
+	closer.Close()
 
 	return pages
 }
