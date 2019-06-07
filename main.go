@@ -39,6 +39,10 @@ type blog struct {
 	Date    string
 }
 
+type superTrace struct {
+	TraceID map[string]string
+}
+
 type cookieStatus struct {
 	Cookie string
 }
@@ -83,11 +87,14 @@ func getPages() []blog {
 	span := tracer.StartSpan("GetRaleurFront")
 	defer span.Finish()
 
+	foo := make(map[string]string)
+	span.Tracer().Inject(span.Context(), opentracing.TextMap, opentracing.TextMapCarrier(foo))
+
 	pages := []blog{}
 	if os.Getenv("NATSGET") != "" {
 		natsGet = os.Getenv("NATSGET")
 	}
-	msg, err := nc.Request(natsGet, nil, time.Second*3)
+	msg, err := nc.Request(natsGet, []byte(foo["uber-trace-id"]), time.Second*3)
 	if err != nil {
 		log.Fatal(err)
 	} else {
@@ -96,10 +103,6 @@ func getPages() []blog {
 	json.Unmarshal(msg.Data, &pages)
 
 	//ctx := opentracing.ContextWithSpan(context.Background(), span)
-	foo := make(map[string]string)
-	bar := span.Tracer().Inject(span.Context(), opentracing.TextMap, opentracing.TextMapCarrier(foo))
-	fmt.Println("FOO:", foo)
-	fmt.Println("BAR:", bar)
 
 	return pages
 }
